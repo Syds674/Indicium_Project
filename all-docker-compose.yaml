@@ -28,6 +28,7 @@ services:
       - ./configs/namenode/flume/flume-env.sh:/opt/flume/conf/flume-env.sh
       - ./flume_config/flume.conf:/opt/flume/conf/flume.conf
       - hadoop_namenode_flume:/opt/flume
+      - ./indicium/hive-site.xml:/opt/spark/conf/hive-site.xml
     environment:
       - CLUSTER_NAME=hadoop-learning
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
@@ -270,12 +271,13 @@ services:
     container_name: external_postgres_db
     volumes:
       - external_postgres_db_data:/var/lib/postgresl/data/
+      - ./data/northwind.sql:/docker-entrypoint-initdb.d/northwind.sql
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: external
-      POSTGRES_PASSWORD: external
-      POSTGRES_DB: external
+      POSTGRES_USER: northwind_user
+      POSTGRES_PASSWORD: thewindisblowing
+      POSTGRES_DB: northwind
   
   external_pgadmin:
     image: dpage/pgadmin4:6.18
