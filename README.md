@@ -29,35 +29,64 @@ Obs.: Após a ultima execução irá conectar automáticamente no namenode.
 
 ##### Estando conectado no namenode, executar:
 ```sh
+chmod 775 /indicium/cria_dir.sh
+```
+```sh
 ./indicium/cria_dir.sh
 ```
 Obs.: Este comando irá criar a estrutura de pastas do HDFS
 
 
+## Etapa do Desafio
+
+### Para a extração dos dados temos a pasta /indicium/scripts contendo os scripts que executarão todo processo de ETL
+```
+extracao_dados_{nome_tabela}.py
+```
+- Script que extrai as tabelas da fonte postgres e CSV disponibilizando os arquivos dentro do diretório do hdfs no formato /hdfs/data/order/{nome_tabela}/input/{fonte}_{nome_tabela}_{data}.csv e no diretório local no formato /indicium/data/order/{nome_tabela}/{fonte}_{nome_tabela}_{data}
 
 
-## Acesse o ecossistema hadoop
-Esta é uma lista de tecnologias ou estruturas expostas ao Host. Você pode acessá-los usando os seguintes URLs.
+```
+process_{nome_tabela}.py 
+```
+- Script que lê o arquivo  /hdfs/data/order/{nome_tabela}/input/{fonte}_{nome_tabela}_{data}.csv, grava um backup no diretório do hdfs /hdfs/data/order/{nome_tabela}/backup/ e salva a tabela no hive.
+
+
+```
+create_view_order_details.py 
+```
+- Script que cria a via de pedidos e seus detalhes
+
+
+##### Exemplo de execução do scripts
+```sh
+spark-submit extracao_dados_{nome_tabela}.py YYYY-MM-DD
+```
+```sh
+spark-submit process_{nome_tabela}.py YYYY-MM-DD
+```
+Obs.: Necessário passar a data como parâmetro no formato YYYY-MM-DD para os scripts extracao_dados_{nome_tabela}.py e process_{nome_tabela}.py
+
+```sh
+spark-submit create_view_order_details.py
+```
+
+
+
+## Para consulta ao Hive e acesso as tabelas, utilize a seguinte URL
+
 |Applicação | Url |
 |--- |--- |
-| Namenode UI | http://localhost:9870/dfshealth.html#tab-overview |
-| Namenode(IPC port) | http://localhost:9000 |
-| History server | http://localhost:8188/applicationhistory |
-| Datanode | http://localhost:9864/ |
-| Nodemanager | http://localhost:8042/node |
-| Resource manager | http://localhost:8088/ |
 | Hue | http://localhost:8888 |
-| Spark Master UI | http://localhost:8080 |
-| Spark Slave UI | http://localhost:8081 |
-| Spark Driver UI | http://localhost:4040 (accessible only after a driver is started) |
-| Zeppelin UI | http://localhost:8082 |
-| Airflow UI | http://localhost:3000 |
-| pgAdmin UI | http://localhost:5000 |
-| Zookeeper|  http://localhost:2181 |
-| kafka broker | http://localhost:9092 |
-| Schema Registry | http://localhost:8083 |
-| Kadmin UI | http://localhost:8084/kadmin/ |
-| Kafka Control Center | http://localhost:9021 |
+
+User login: hue
+Password: hue
+
+- Para consultar a view view_order_details no hive, execute:
+```sh
+SELECT * FROM northwind.view_order_details 
+```
+
 
 ## Dependências
 - [Docker](https://docs.docker.com/):
