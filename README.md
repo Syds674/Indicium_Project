@@ -36,6 +36,11 @@ chmod 775 /indicium/cria_dir.sh
 ```
 Obs.: Este comando irá criar a estrutura de pastas do HDFS
 
+##### Executar o comando de criação de database no Hive:
+```sh
+spark-submit create_database.py
+```
+
 
 ## Etapa do Desafio
 
