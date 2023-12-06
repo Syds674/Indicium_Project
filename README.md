@@ -20,7 +20,7 @@ cd Indicium_Project
 sudo docker-compose -f all-docker-compose.yaml up
 ```
 
-##### Após o término da execução entre novamente na pasta Indicium_Project
+##### Após o término da execução, entre novamente na pasta Indicium_Project
 ```sh
 cd Indicium_Project
 ```
