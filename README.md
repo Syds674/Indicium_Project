@@ -20,7 +20,12 @@ cd Indicium_Project
 sudo docker-compose -f all-docker-compose.yaml up
 ```
 
-##### Para realizar a cópia da estrutura de scripts para dentro do namenode, abra um novo terminal no diretório Indicium_Project e executar: 
+##### Após o término da execução entre novamente na pasta Indicium_Project
+```sh
+cd Indicium_Project
+```
+
+##### Em seguida, para realizar a cópia da estrutura de scripts para dentro do namenode, abra um novo terminal no diretório Indicium_Project e executar: 
 ```sh
 ./copy_indicium_structure.sh
 ```
