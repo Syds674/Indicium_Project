@@ -65,15 +65,15 @@ create_view_order_details.py
 
 ##### Exemplo de execução do scripts
 ```sh
-spark-submit extracao_dados_{nome_tabela}.py YYYY-MM-DD
+spark-submit /indicium/scripts/extracao_dados_{nome_tabela}.py YYYY-MM-DD
 ```
 ```sh
-spark-submit process_{nome_tabela}.py YYYY-MM-DD
+spark-submit /indicium/scripts/process_{nome_tabela}.py YYYY-MM-DD
 ```
 Obs.: Necessário passar a data como parâmetro no formato YYYY-MM-DD para os scripts extracao_dados_{nome_tabela}.py e process_{nome_tabela}.py
 
 ```sh
-spark-submit create_view_order_details.py
+spark-submit /indicium/scripts/create_view_order_details.py
 ```
 
 
