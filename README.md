@@ -38,7 +38,7 @@ Obs.: Este comando irá criar a estrutura de pastas do HDFS
 
 ##### Executar o comando de criação de database no Hive:
 ```sh
-spark-submit create_database.py
+spark-submit /indicium/create_database.py
 ```
 
 
