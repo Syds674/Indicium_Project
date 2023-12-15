@@ -1,5 +1,5 @@
 #!/bin/bash
 
-sudo docker cp indicium namenode:/
+sudo docker cp meteol namenode:/
 
 sudo docker exec -it namenode bash 
