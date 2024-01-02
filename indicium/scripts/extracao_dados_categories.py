@@ -1,69 +1,64 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from pyspark.sql import functions as F
-import requests
-from zipfile import ZipFile
+import argparse
+from datetime import datetime, date
 
-# Criar SparkSession
-spark = SparkSession.builder.appName('Get - CSV').getOrCreate()
+parser = argparse.ArgumentParser()       
+parser.add_argument("data_processamento", help="FORMATO ACEITAVEL: YYYY-MM-DD",  )
+args = parser.parse_args()
 
-def download_and_extract_csv(url, local_zip_path, local_extract_path):
-    # Baixar o arquivo ZIP
-    response = requests.get(url)
 
-    # Certificar-se de que o diretório pai existe
-    local_zip_dir = spark._jvm.java.io.File(local_zip_path).getParent()
-    local_zip_dir.mkdirs()
 
-    with open(local_zip_path, "wb") as zip_file:
-        zip_file.write(response.content)
+def get_postgres(table_name):
+    spark = SparkSession.builder \
+    .appName("Get - PostgreSQL") \
+    .config("spark.jars", "/indicium/postgresql-42.6.0.jar") \
+    .getOrCreate()
 
-    # Extrair o conteúdo do ZIP diretamente para o local_extract_path
-    with ZipFile(local_zip_path, "r") as zip_ref:
-        zip_ref.extractall(local_extract_path)
+    url = "jdbc:postgresql://external_postgres_db:5432/northwind"
 
-def get_csv(file_path):
-    df = spark.read.format("csv").option("header", True).load(file_path)
+    properties = {
+    "user": "northwind_user",
+    "password": "thewindisblowing",
+    "driver": "org.postgresql.Driver"}
+
+    df = spark.read.jdbc(url, table_name, properties=properties)
+
     return df
 
-# Caminho local para salvar o arquivo ZIP
-local_zip_path = "/hdfs/data/order/tmp/dados_brutos.zip"
 
-# Caminho local para extrair os arquivos CSV
-local_extract_path = "/hdfs/data/order/tmp/dados_temp"
+def get_csv(file_name):
+    spark = SparkSession.builder.appName('Get - CSV').getOrCreate()
 
-# Caminho no HDFS para armazenar os arquivos CSV
-hdfs_path = "/hdfs/data/order/2000"
+    df = spark.read.format("csv").option("header", True).load("file:/indicium/{}.csv".format(file_name))
 
-date_link = '2000'  # Nome do arquivo ZIP
+    return df
+
+
+
+fonte = 'postgres'
+table_name = 'categories'
+file_name = ''
+
+
 
 try:
-    # Baixar e extrair o CSV diretamente para a pasta local no HDFS
-    download_and_extract_csv("https://portal.inmet.gov.br/uploads/dadoshistoricos/{}.zip".format(date_link), local_zip_path, local_extract_path)
+    if fonte == 'postgres':
+        print("EXTRAINDO DO POSTGRES PARA DATA: {}".format(args.data_processamento))
+        df = get_postgres(table_name)
 
-    # Listar arquivos extraídos
-    csv_files = [f for f in spark._jvm.java.io.File(local_extract_path).list() if f.endswith('.CSV')]
+        #salva o csv no hdfs
+        df.coalesce(1).write.mode('overwrite').option('header','true').csv('/hdfs/data/order/{}/input/{}_{}_{}.csv'.format(table_name, fonte, table_name, args.data_processamento))
+        #salva o csv no disco local 
+        df.coalesce(1).write.mode('overwrite').option('header','true').csv('file:/indicium/data/order/{}/{}_{}_{}'.format(table_name, fonte, table_name, args.data_processamento))
 
-    for csv_file in csv_files:
-        # Caminho completo do arquivo local
-        local_file_path = spark._jvm.java.io.File(local_extract_path, csv_file).getPath()
+    elif fonte == 'csv':
+        print("EXTRAINDO DO CSV PARA DATA: {}".format(args.data_processamento))
+        df = get_csv(file_name)
 
-        # Caminho no HDFS para armazenar os arquivos CSV com seus próprios nomes
-        hdfs_file_path = spark._jvm.java.io.Path(hdfs_path, csv_file).toString()
-
-        # Ler CSV e salvar no HDFS
-        df = get_csv(local_file_path)
-        df.coalesce(1).write.mode('overwrite').option('header', 'true').csv(hdfs_file_path)
+        #salva o csv no hdfs                                                                   
+        df.coalesce(1).write.mode('overwrite').option('header','true').csv('/hdfs/data/order/{}/input/{}_{}_{}.csv'.format(file_name, fonte, file_name, args.data_processamento))
+        #salva o csv no disco local 
+        df.coalesce(1).write.mode('overwrite').option('header','true').csv('file:/indicium/data/order/{}/{}_{}_{}'.format(file_name, fonte, file_name, args.data_processamento))
 
 except Exception as e:
     print("ERRO:", e)
-
-finally:
-    # Verificar a existência do diretório antes de removê-lo
-    if spark._jvm.java.io.File(local_zip_path).exists():
-        spark._jvm.java.io.File(local_zip_path).delete()
-
-    # Remover os arquivos temporários
-    for file in spark._jvm.java.io.File(local_extract_path).listFiles():
-        file.delete()
-    spark._jvm.java.io.File(local_extract_path).delete()
